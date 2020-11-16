@@ -94,29 +94,18 @@ class MockGenerator : AbstractProcessor() {
     }
 
     @KotlinPoetMetadataPreview
-    private fun KmFunction.toFunctionSpec(): FunSpec {
-        val returnTypeClass = returnType.classifier as KmClassifier.Class
-        val returnTypeClassNameStr = returnTypeClass.name
-        val returnTypeClassName = ClassInspectorUtil.createClassName(returnTypeClassNameStr)
-
-        return FunSpec.builder(name)
-            .addModifiers(KModifier.OVERRIDE)
-            .addParameters(valueParameters.map { it.toParameterSpec() })
-            .returns(returnTypeClassName)
-            .addStatement("TODO()")
-            .build()
-    }
+    private fun KmFunction.toFunctionSpec(): FunSpec = FunSpec.builder(name)
+        .addModifiers(KModifier.OVERRIDE)
+        .addParameters(valueParameters.map { it.toParameterSpec() })
+        .returns(returnType.classifier.toClassName())
+        .addStatement("TODO()")
+        .build()
 
 
     @OptIn(KotlinPoetMetadataPreview::class)
-    private fun KmValueParameter.toParameterSpec(): ParameterSpec {
-        val typeClass = type!!.classifier as KmClassifier.Class
-        val typeClassNameStr = typeClass.name
-        val typeClassName = ClassInspectorUtil.createClassName(typeClassNameStr)
-
-        return ParameterSpec.builder(name, typeClassName)
+    private fun KmValueParameter.toParameterSpec(): ParameterSpec =
+        ParameterSpec.builder(name, type!!.classifier.toClassName())
             .build()
-    }
 
     private fun dumpKlass(klass: KmClass) {
         println("#\n#Supertypes\n#")
