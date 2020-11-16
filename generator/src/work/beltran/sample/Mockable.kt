@@ -1,3 +1,3 @@
 package work.beltran.sample
 
-annotation class GenName
+annotation class Mockable
