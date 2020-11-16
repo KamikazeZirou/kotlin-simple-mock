@@ -1,8 +1,11 @@
 package work.beltran.sample
 
 import com.google.auto.service.AutoService
+import com.google.common.io.MoreFiles
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
@@ -69,9 +72,7 @@ class MockGenerator : AbstractProcessor() {
         val file = FileSpec.builder(packageName, fileName)
             .addType(
                 TypeSpec.classBuilder(fileName)
-//                    .addSuperinterfaces(klass.supertypes.map {
-//                        TODO()
-//                    })
+                    .addSuperinterface(ClassInspectorUtil.createClassName(klass.name))
 //                    .addProperties(klass.functions.map {
 //                        TODO()
 //                    })
@@ -86,6 +87,12 @@ class MockGenerator : AbstractProcessor() {
         file.writeTo(File(kaptKotlinGeneratedDir, "$fileName.kt"))
     }
 
+    @OptIn(KotlinPoetMetadataPreview::class)
+    private fun KmClassifier.toClassName(): ClassName {
+        val klass = this as KmClassifier.Class
+        return ClassInspectorUtil.createClassName(klass.name)
+    }
+
     @KotlinPoetMetadataPreview
     private fun KmFunction.toFunctionSpec(): FunSpec {
         val returnTypeClass = returnType.classifier as KmClassifier.Class
@@ -93,6 +100,7 @@ class MockGenerator : AbstractProcessor() {
         val returnTypeClassName = ClassInspectorUtil.createClassName(returnTypeClassNameStr)
 
         return FunSpec.builder(name)
+            .addModifiers(KModifier.OVERRIDE)
             .addParameters(valueParameters.map { it.toParameterSpec() })
             .returns(returnTypeClassName)
             .addStatement("TODO()")
@@ -111,6 +119,13 @@ class MockGenerator : AbstractProcessor() {
     }
 
     private fun dumpKlass(klass: KmClass) {
+        println("#\n#Supertypes\n#")
+        klass.supertypes.forEach {
+            println(it.classifier)
+            println(it.arguments)
+        }
+
+        println("#\n# Constructors\n#")
         klass.constructors.forEach { constructor ->
             println(constructor.signature)
         }

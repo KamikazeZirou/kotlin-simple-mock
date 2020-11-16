@@ -1,10 +1,10 @@
 package work.beltran.sample
 
 @Mockable
-class Hello {
+interface Hello {
     fun foo() {}
-    fun bar(value: Int): Int { return 0 }
-    fun add(a: Float, b: Float): Float { return a + b }
+    fun bar(value: Int): Int
+    fun add(a: Float, b: Float): Float
 }
 
 fun main(args: Array<String>) {
