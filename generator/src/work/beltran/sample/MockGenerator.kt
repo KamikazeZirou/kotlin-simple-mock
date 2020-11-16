@@ -147,24 +147,6 @@ class MockGenerator : AbstractProcessor() {
         }
     }
 
-    private fun generateClass(className: String, pack: String) {
-        val fileName = "Generated_$className"
-        val file = FileSpec.builder(pack, fileName)
-            .addType(
-                TypeSpec.classBuilder(fileName)
-                    .addFunction(
-                        FunSpec.builder("getName")
-                            .addStatement("return \"World\"")
-                            .build()
-                    )
-                    .build()
-            )
-            .build()
-
-        val kaptKotlinGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
-        file.writeTo(File(kaptKotlinGeneratedDir, "$fileName.kt"))
-    }
-
     companion object {
         const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
     }
