@@ -1,12 +1,13 @@
 package work.beltran.sample
 
 import com.google.auto.service.AutoService
-import com.google.common.io.MoreFiles
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.specs.internal.ClassInspectorUtil
@@ -73,9 +74,20 @@ class MockGenerator : AbstractProcessor() {
             .addType(
                 TypeSpec.classBuilder(fileName)
                     .addSuperinterface(ClassInspectorUtil.createClassName(klass.name))
-//                    .addProperties(klass.functions.map {
-//                        TODO()
-//                    })
+                    .addProperties(klass.functions.mapIndexed { index, function ->
+                        val mockHandler = LambdaTypeName.get(
+                            null,
+                            parameters = function.valueParameters.map {
+                                it.toParameterSpec()
+                            },
+                            returnType = function.returnType.classifier.toClassName()
+                        )
+
+                        PropertySpec.builder("${function.name}FuncHandler", mockHandler.copy(nullable = true))
+                            .mutable()
+                            .initializer("null")
+                            .build()
+                    })
                     .addFunctions(
                         klass.functions.map { it.toFunctionSpec() }
                     )
@@ -94,13 +106,17 @@ class MockGenerator : AbstractProcessor() {
     }
 
     @KotlinPoetMetadataPreview
-    private fun KmFunction.toFunctionSpec(): FunSpec = FunSpec.builder(name)
-        .addModifiers(KModifier.OVERRIDE)
-        .addParameters(valueParameters.map { it.toParameterSpec() })
-        .returns(returnType.classifier.toClassName())
-        .addStatement("TODO()")
-        .build()
-
+    private fun KmFunction.toFunctionSpec(): FunSpec {
+        val args = valueParameters.joinToString(",") { it.name }
+        return FunSpec.builder(name)
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameters(valueParameters.map { it.toParameterSpec() })
+            .returns(returnType.classifier.toClassName())
+            .addCode("""
+                return ${name}FuncHandler!!(${args})
+            """.trimIndent())
+            .build()
+    }
 
     @OptIn(KotlinPoetMetadataPreview::class)
     private fun KmValueParameter.toParameterSpec(): ParameterSpec =
