@@ -6,18 +6,15 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
-import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.metadata.ImmutableKmClass
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.specs.internal.ClassInspectorUtil
-import kotlinx.metadata.KmClass
-import kotlinx.metadata.KmClassifier
-import kotlinx.metadata.KmFunction
-import kotlinx.metadata.KmValueParameter
+import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
+import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
-import kotlinx.metadata.jvm.signature
 import java.io.File
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Processor
@@ -26,7 +23,14 @@ import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 
+
+data class Taco(val seasoning: String, val soft: Boolean) {
+    fun foo(): List<String> = listOf()
+}
+
+
 @AutoService(Processor::class)
+@KotlinPoetMetadataPreview
 class MockGenerator : AbstractProcessor() {
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
         return mutableSetOf(Mockable::class.java.name)
@@ -36,17 +40,59 @@ class MockGenerator : AbstractProcessor() {
         return SourceVersion.latest()
     }
 
+    @KotlinPoetMetadataPreview
     override fun process(annotations: MutableSet<out TypeElement>?, roundEnv: RoundEnvironment?): Boolean {
         roundEnv!!.getElementsAnnotatedWith(Mockable::class.java)
             .forEach {
                 val klass = it.toKmClass()
-                dumpKlass(klass)
                 generateMock(klass)
             }
         return true
     }
 
-    private fun Element.toKmClass(): KmClass {
+    private fun generateMock(klass: ImmutableKmClass) {
+        val names = klass.name.split("/")
+        val packageName = names.dropLast(1).joinToString(".")
+        val className = klass.name.split("/").last()
+        val fileName = "Mock$className"
+
+        val type = klass.toTypeSpec(classInspector = null, className = ClassName(packageName, fileName))
+
+        val file = FileSpec.builder(packageName, fileName)
+            .addType(
+                TypeSpec.classBuilder(fileName)
+                    .addSuperinterface(ClassInspectorUtil.createClassName(klass.name))
+                    .addProperties(type.funSpecs.map { funSpec ->
+                        PropertySpec
+                            .builder(
+                                "${funSpec.name}FuncHandler", LambdaTypeName.get(
+                                    funSpec.receiverType,
+                                    parameters = funSpec.parameters,
+                                    returnType = funSpec.returnType!!
+                                ).copy(nullable = true)
+                            )
+                            .mutable()
+                            .initializer("null")
+                            .build()
+                    })
+                    .addFunctions(type.funSpecs.map { funSpec ->
+                        val params = funSpec.parameters.joinToString(",") { it.name }
+                        FunSpec.builder(funSpec.name)
+                            .addModifiers(KModifier.OVERRIDE)
+                            .addParameters(funSpec.parameters)
+                            .apply { funSpec.returnType?.let { returns(it) } }
+                            .addCode("return ${funSpec.name}FuncHandler!!(${params})")
+                            .build()
+                    })
+                    .build()
+            )
+            .build()
+
+        val kaptKotlinGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
+        file.writeTo(File(kaptKotlinGeneratedDir, "$fileName.kt"))
+    }
+
+    private fun Element.toKmClass(): ImmutableKmClass {
         val metadata = getAnnotation(Metadata::class.java)
         val header = KotlinClassHeader(
             kind = metadata.kind,
@@ -60,96 +106,7 @@ class MockGenerator : AbstractProcessor() {
         )
         val kotlinMetadata = KotlinClassMetadata.read(header)
         val classMetadata = kotlinMetadata as KotlinClassMetadata.Class
-        return classMetadata.toKmClass()
-    }
-
-    @OptIn(KotlinPoetMetadataPreview::class)
-    private fun generateMock(klass: KmClass) {
-        val names = klass.name.split("/")
-        val packageName = names.dropLast(1).joinToString(".")
-        val className = klass.name.split("/").last()
-        val fileName = "Mock$className"
-
-        val file = FileSpec.builder(packageName, fileName)
-            .addType(
-                TypeSpec.classBuilder(fileName)
-                    .addSuperinterface(ClassInspectorUtil.createClassName(klass.name))
-                    .addProperties(klass.functions.mapIndexed { index, function ->
-                        val mockHandler = LambdaTypeName.get(
-                            null,
-                            parameters = function.valueParameters.map {
-                                it.toParameterSpec()
-                            },
-                            returnType = function.returnType.classifier.toClassName()
-                        )
-
-                        PropertySpec.builder("${function.name}FuncHandler", mockHandler.copy(nullable = true))
-                            .mutable()
-                            .initializer("null")
-                            .build()
-                    })
-                    .addFunctions(
-                        klass.functions.map { it.toFunctionSpec() }
-                    )
-                    .build()
-            )
-            .build()
-
-        val kaptKotlinGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
-        file.writeTo(File(kaptKotlinGeneratedDir, "$fileName.kt"))
-    }
-
-    @OptIn(KotlinPoetMetadataPreview::class)
-    private fun KmClassifier.toClassName(): ClassName {
-        val klass = this as KmClassifier.Class
-        return ClassInspectorUtil.createClassName(klass.name)
-    }
-
-    @KotlinPoetMetadataPreview
-    private fun KmFunction.toFunctionSpec(): FunSpec {
-        val args = valueParameters.joinToString(",") { it.name }
-        return FunSpec.builder(name)
-            .addModifiers(KModifier.OVERRIDE)
-            .addParameters(valueParameters.map { it.toParameterSpec() })
-            .returns(returnType.classifier.toClassName())
-            .addCode("""
-                return ${name}FuncHandler!!(${args})
-            """.trimIndent())
-            .build()
-    }
-
-    @OptIn(KotlinPoetMetadataPreview::class)
-    private fun KmValueParameter.toParameterSpec(): ParameterSpec =
-        ParameterSpec.builder(name, type!!.classifier.toClassName())
-            .build()
-
-    private fun dumpKlass(klass: KmClass) {
-        println("#\n#Supertypes\n#")
-        klass.supertypes.forEach {
-            println(it.classifier)
-            println(it.arguments)
-        }
-
-        println("#\n# Constructors\n#")
-        klass.constructors.forEach { constructor ->
-            println(constructor.signature)
-        }
-
-        klass.properties.forEach { property ->
-            println(property.name)
-            println(property.returnType.classifier)
-            println(property.typeParameters)
-        }
-        klass.functions.forEach { func ->
-            println()
-            println(func.name)
-            println(func.signature)
-            func.valueParameters.forEach {
-                println(it.name)
-                println(it.type?.classifier)
-            }
-            println(func.returnType.classifier)
-        }
+        return classMetadata.toImmutableKmClass()
     }
 
     companion object {
