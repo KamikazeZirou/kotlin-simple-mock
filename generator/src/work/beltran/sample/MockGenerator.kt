@@ -55,13 +55,13 @@ class MockGenerator : AbstractProcessor() {
         val names = klass.name.split("/")
         val packageName = names.dropLast(1).joinToString(".")
         val className = klass.name.split("/").last()
-        val fileName = "Mock$className"
+        val mockClassName = "Mock$className"
 
-        val type = klass.toTypeSpec(classInspector = null, className = ClassName(packageName, fileName))
+        val type = klass.toTypeSpec(classInspector = null, className = ClassName(packageName, mockClassName))
 
-        val file = FileSpec.builder(packageName, fileName)
+        val file = FileSpec.builder(packageName, mockClassName)
             .addType(
-                TypeSpec.classBuilder(fileName)
+                TypeSpec.classBuilder(mockClassName)
                     .addSuperinterface(ClassInspectorUtil.createClassName(klass.name))
                     .addProperties(type.funSpecs.map { funSpec ->
                         PropertySpec
@@ -98,7 +98,7 @@ class MockGenerator : AbstractProcessor() {
             .build()
 
         val kaptKotlinGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
-        file.writeTo(File(kaptKotlinGeneratedDir, "$fileName.kt"))
+        file.writeTo(File(kaptKotlinGeneratedDir, "$mockClassName.kt"))
     }
 
     private fun Element.toKmClass(): ImmutableKmClass {
