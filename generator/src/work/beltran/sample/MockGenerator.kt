@@ -8,6 +8,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.metadata.ImmutableKmClass
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.specs.internal.ClassInspectorUtil
@@ -75,13 +76,21 @@ class MockGenerator : AbstractProcessor() {
                             .initializer("null")
                             .build()
                     })
+                    .addProperties(type.funSpecs.map { funSpec ->
+                        PropertySpec
+                            .builder("${funSpec.name}CallCount", Int::class.asTypeName())
+                            .mutable()
+                            .initializer("0")
+                            .build()
+                    })
                     .addFunctions(type.funSpecs.map { funSpec ->
                         val params = funSpec.parameters.joinToString(",") { it.name }
                         FunSpec.builder(funSpec.name)
                             .addModifiers(KModifier.OVERRIDE)
                             .addParameters(funSpec.parameters)
                             .apply { funSpec.returnType?.let { returns(it) } }
-                            .addCode("return ${funSpec.name}FuncHandler!!(${params})")
+                            .addStatement("${funSpec.name}CallCount += 1")
+                            .addStatement("return ${funSpec.name}FuncHandler!!(${params})")
                             .build()
                     })
                     .build()
