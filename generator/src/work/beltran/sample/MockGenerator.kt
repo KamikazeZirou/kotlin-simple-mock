@@ -24,12 +24,6 @@ import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 
-
-data class Taco(val seasoning: String, val soft: Boolean) {
-    fun foo(): List<String> = listOf()
-}
-
-
 @AutoService(Processor::class)
 @KotlinPoetMetadataPreview
 class MockGenerator : AbstractProcessor() {
