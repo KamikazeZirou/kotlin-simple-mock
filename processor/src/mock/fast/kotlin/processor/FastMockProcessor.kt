@@ -1,4 +1,4 @@
-package mock.fast.kotlin
+package mock.fast.kotlin.processor
 
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.ClassName
@@ -18,6 +18,7 @@ import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
+import mock.fast.kotlin.Mockable
 import java.io.File
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Processor
@@ -27,8 +28,8 @@ import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 
 @AutoService(Processor::class)
-@KotlinPoetMetadataPreview
-class MockGenerator : AbstractProcessor() {
+@OptIn(KotlinPoetMetadataPreview::class)
+internal class FastMockProcessor : AbstractProcessor() {
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
         return mutableSetOf(Mockable::class.java.name)
     }
@@ -37,7 +38,6 @@ class MockGenerator : AbstractProcessor() {
         return SourceVersion.latest()
     }
 
-    @KotlinPoetMetadataPreview
     override fun process(annotations: MutableSet<out TypeElement>?, roundEnv: RoundEnvironment?): Boolean {
         roundEnv!!.getElementsAnnotatedWith(Mockable::class.java)
             .forEach {

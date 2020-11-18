@@ -13,8 +13,8 @@ sourceSets {
 }
 
 dependencies {
-    kapt(project(":generator"))
-    compileOnly(project(":generator"))
+    kapt(project(":processor"))
+    compileOnly(project(":processor"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1")
 
     testImplementation("junit:junit:4.13.1")
