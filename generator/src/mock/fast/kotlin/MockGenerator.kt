@@ -1,4 +1,4 @@
-package work.beltran.sample
+package mock.fast.kotlin
 
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.ClassName

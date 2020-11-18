@@ -17,6 +17,14 @@ buildscript {
 }
 
 allprojects {
+    tasks.withType<KotlinCompile>().all {
+        kotlinOptions.freeCompilerArgs +=
+            "-Xuse-experimental=" +
+                "kotlin.Experimental," +
+                "kotlinx.coroutines.ExperimentalCoroutinesApi," +
+                "kotlinx.coroutines.FlowPreview"
+    }
+
     repositories {
         mavenLocal()
         jcenter()
