@@ -82,7 +82,7 @@ class MockGenerator : AbstractProcessor() {
                     "${funSpec.name}FuncHandler", LambdaTypeName.get(
                         funSpec.receiverType,
                         parameters = funSpec.parameters,
-                        returnType = funSpec.returnType!!
+                        returnType = funSpec.returnType ?: Unit::class.asTypeName()
                     ).copy(nullable = true)
                 )
                 .mutable()
