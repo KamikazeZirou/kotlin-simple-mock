@@ -110,10 +110,16 @@ class MockGenerator : AbstractProcessor() {
 
 
         val params = funSpec.parameters.joinToString(",") { it.name }
+        val supportModifiers = setOf(
+            KModifier.SUSPEND
+        )
 
         addFunction(
             FunSpec.builder(funSpec.name)
                 .addModifiers(KModifier.OVERRIDE)
+                .addModifiers(funSpec.modifiers.filter {
+                    supportModifiers.contains(it)
+                })
                 .addParameters(funSpec.parameters)
                 .apply { funSpec.returnType?.let { returns(it) } }
                 .addStatement("${funSpec.name}CallCount += 1")
