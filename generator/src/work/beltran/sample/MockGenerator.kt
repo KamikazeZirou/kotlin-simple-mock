@@ -59,95 +59,115 @@ class MockGenerator : AbstractProcessor() {
             .addType(
                 TypeSpec.classBuilder(mockClassName)
                     .addSuperinterface(ClassInspectorUtil.createClassName(klass.name))
-                    .addProperties(type.funSpecs.map { funSpec ->
-                        PropertySpec
-                            .builder(
-                                "${funSpec.name}FuncHandler", LambdaTypeName.get(
-                                    funSpec.receiverType,
-                                    parameters = funSpec.parameters,
-                                    returnType = funSpec.returnType!!
-                                ).copy(nullable = true)
-                            )
-                            .mutable()
-                            .initializer("null")
-                            .build()
-                    })
-                    .addProperties(type.funSpecs.map { funSpec ->
-                        PropertySpec
-                            .builder("${funSpec.name}CallCount", Int::class.asTypeName())
-                            .mutable()
-                            .initializer("0")
-                            .build()
-                    })
-                    .addProperties(type.funSpecs.map { funSpec ->
-                        PropertySpec
-                            .builder(
-                                "${funSpec.name}FuncArgValues",
-                                MUTABLE_LIST.parameterizedBy(
-                                    List::class.asTypeName().parameterizedBy(Any::class.asTypeName())
-                                )
-                            )
-                            .mutable()
-                            .initializer("mutableListOf()")
-                            .build()
-                    })
-                    .addFunctions(type.funSpecs.map { funSpec ->
-                        val params = funSpec.parameters.joinToString(",") { it.name }
-                        FunSpec.builder(funSpec.name)
-                            .addModifiers(KModifier.OVERRIDE)
-                            .addParameters(funSpec.parameters)
-                            .apply { funSpec.returnType?.let { returns(it) } }
-                            .addStatement("${funSpec.name}CallCount += 1")
-                            .addStatement("${funSpec.name}FuncArgValues.add(listOf(${params}))")
-                            .addStatement("return ${funSpec.name}FuncHandler!!(${params})")
-                            .build()
-                    })
-                    .addProperties(type.propertySpecs.map { propertySpec ->
-                        PropertySpec
-                            .builder(
-                                "underlying${propertySpec.name.capitalize()}",
-                                propertySpec.type.copy(nullable = true)
-                            )
-                            .mutable(true)
-                            .initializer("null")
-                            .build()
-                    })
-                    .addProperties(type.propertySpecs.map { propertySpec ->
-                        PropertySpec
-                            .builder("${propertySpec.name}SetCallCount", Int::class.asTypeName())
-                            .mutable()
-                            .initializer("0")
-                            .build()
-                    })
-                    .addProperties(type.propertySpecs.map { propertySpec ->
-                        PropertySpec
-                            .builder(propertySpec.name, propertySpec.type)
-                            .addModifiers(KModifier.OVERRIDE)
-                            .getter(
-                                FunSpec.getterBuilder()
-                                    .addStatement("return underlying${propertySpec.name.capitalize()}!!")
-                                    .build()
-                            )
-                            .apply {
-                                if (propertySpec.mutable) {
-                                    mutable(true)
-                                    setter(
-                                        FunSpec.setterBuilder()
-                                            .addParameter("newValue", propertySpec.type)
-                                            .addStatement("underlying${propertySpec.name.capitalize()} = newValue")
-                                            .addStatement("${propertySpec.name}SetCallCount += 1")
-                                            .build()
-                                    )
-                                }
-                            }
-                            .build()
-                    })
+                    .addMockFunctions(type.funSpecs)
+                    .addMockProperties(type.propertySpecs)
                     .build()
             )
             .build()
 
         val kaptKotlinGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
         file.writeTo(File(kaptKotlinGeneratedDir, "$mockClassName.kt"))
+    }
+
+    private fun TypeSpec.Builder.addMockFunctions(funSpecs: List<FunSpec>): TypeSpec.Builder = apply {
+        funSpecs.forEach {
+            addMockFunction(it)
+        }
+    }
+
+    private fun TypeSpec.Builder.addMockFunction(funSpec: FunSpec): TypeSpec.Builder = apply {
+        addProperty(
+            PropertySpec
+                .builder(
+                    "${funSpec.name}FuncHandler", LambdaTypeName.get(
+                        funSpec.receiverType,
+                        parameters = funSpec.parameters,
+                        returnType = funSpec.returnType!!
+                    ).copy(nullable = true)
+                )
+                .mutable()
+                .initializer("null")
+                .build()
+        ).addProperty(
+            PropertySpec
+                .builder("${funSpec.name}CallCount", Int::class.asTypeName())
+                .mutable()
+                .initializer("0")
+                .build()
+
+        ).addProperty(
+            PropertySpec
+                .builder(
+                    "${funSpec.name}FuncArgValues",
+                    MUTABLE_LIST.parameterizedBy(
+                        List::class.asTypeName().parameterizedBy(Any::class.asTypeName())
+                    )
+                )
+                .mutable()
+                .initializer("mutableListOf()")
+                .build()
+        )
+
+
+        val params = funSpec.parameters.joinToString(",") { it.name }
+
+        addFunction(
+            FunSpec.builder(funSpec.name)
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameters(funSpec.parameters)
+                .apply { funSpec.returnType?.let { returns(it) } }
+                .addStatement("${funSpec.name}CallCount += 1")
+                .addStatement("${funSpec.name}FuncArgValues.add(listOf(${params}))")
+                .addStatement("return ${funSpec.name}FuncHandler!!(${params})")
+                .build()
+        )
+    }
+
+    private fun TypeSpec.Builder.addMockProperties(propertySpecs: List<PropertySpec>): TypeSpec.Builder = apply {
+        propertySpecs.forEach {
+            addMockProperty(it)
+        }
+    }
+
+    private fun TypeSpec.Builder.addMockProperty(propertySpec: PropertySpec): TypeSpec.Builder = apply {
+        addProperty(
+            PropertySpec
+                .builder(
+                    "underlying${propertySpec.name.capitalize()}",
+                    propertySpec.type.copy(nullable = true)
+                )
+                .mutable(true)
+                .initializer("null")
+                .build()
+        ).addProperty(
+            PropertySpec
+                .builder("${propertySpec.name}SetCallCount", Int::class.asTypeName())
+                .mutable()
+                .initializer("0")
+                .build()
+        ).addProperty(
+            PropertySpec
+                .builder(propertySpec.name, propertySpec.type)
+                .addModifiers(KModifier.OVERRIDE)
+                .getter(
+                    FunSpec.getterBuilder()
+                        .addStatement("return underlying${propertySpec.name.capitalize()}!!")
+                        .build()
+                )
+                .apply {
+                    if (propertySpec.mutable) {
+                        mutable(true)
+                        setter(
+                            FunSpec.setterBuilder()
+                                .addParameter("newValue", propertySpec.type)
+                                .addStatement("underlying${propertySpec.name.capitalize()} = newValue")
+                                .addStatement("${propertySpec.name}SetCallCount += 1")
+                                .build()
+                        )
+                    }
+                }
+                .build()
+        )
     }
 
     private fun Element.toKmClass(): ImmutableKmClass {
