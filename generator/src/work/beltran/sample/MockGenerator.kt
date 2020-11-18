@@ -6,6 +6,8 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
+import com.squareup.kotlinpoet.MUTABLE_LIST
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
@@ -77,6 +79,15 @@ class MockGenerator : AbstractProcessor() {
                             .initializer("0")
                             .build()
                     })
+                    .addProperties(type.funSpecs.map { funSpec ->
+                        PropertySpec
+                            .builder("${funSpec.name}FuncArgValues",
+                                MUTABLE_LIST.parameterizedBy(List::class.asTypeName().parameterizedBy(Any::class.asTypeName()))
+                            )
+                            .mutable()
+                            .initializer("mutableListOf()")
+                            .build()
+                    })
                     .addFunctions(type.funSpecs.map { funSpec ->
                         val params = funSpec.parameters.joinToString(",") { it.name }
                         FunSpec.builder(funSpec.name)
@@ -84,6 +95,7 @@ class MockGenerator : AbstractProcessor() {
                             .addParameters(funSpec.parameters)
                             .apply { funSpec.returnType?.let { returns(it) } }
                             .addStatement("${funSpec.name}CallCount += 1")
+                            .addStatement("${funSpec.name}FuncArgValues.add(listOf(${params}))")
                             .addStatement("return ${funSpec.name}FuncHandler!!(${params})")
                             .build()
                     })

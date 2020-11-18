@@ -18,4 +18,7 @@ fun main(args: Array<String>) {
     }
 
     println(mockHello.add(1.toFloat(), 2.toFloat()))
+    val (a, b) = mockHello.addFuncArgValues.first()
+    println(a == 1.toFloat())
+    println(b == 2.toFloat())
 }
