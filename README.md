@@ -1,6 +1,6 @@
 # kotlin-fast-mock
 
-## Setup
+## Setup(Gradle Kotlin DSL)
 
 #### Step 1. Add it in your root build.gradle at the end of repositories.
 
@@ -17,8 +17,8 @@ allprojects {
 
 ```
 dependencies {
-    implementation('com.github.KamikazeZirou:kotlin-fast-mock:v0.0.1')
-    kapt('com.github.KamikazeZirou:kotlin-fast-mock:v0.0.1')
+    implementation("com.github.KamikazeZirou.kotlin-fast-mock:processor:0.0.2")
+    kapt("com.github.KamikazeZirou.kotlin-fast-mock:processor:0.0.2")
 }
 ```
 
