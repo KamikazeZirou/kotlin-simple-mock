@@ -1,7 +1,11 @@
 plugins {
     kotlin("jvm")
     kotlin("kapt")
+    id("maven")
 }
+
+group="com.github.KamikzeZirou"
+version = "0.0.1-SNAPSHOT"
 
 sourceSets {
     getByName("main").java.srcDirs("src")
