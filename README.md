@@ -8,7 +8,7 @@
 allprojects {
     repositories {
         ...
-        maven { url 'https://jitpack.io' }
+        maven(url = "https://jitpack.io")
     }
 }
 ```
@@ -17,7 +17,8 @@ allprojects {
 
 ```
 dependencies {
-    implementation 'com.github.KamikazeZirou:kotlin-fast-mock:v0.0.1'
+    implementation('com.github.KamikazeZirou:kotlin-fast-mock:v0.0.1')
+    kapt('com.github.KamikazeZirou:kotlin-fast-mock:v0.0.1')
 }
 ```
 
