@@ -5,6 +5,13 @@ plugins {
 
 kapt {
     generateStubs = true
+
+    arguments {
+        // Specify the path of the generated mock.
+        // In the default path, the product code will contain mocks.
+        // So, specify the directory of auto-generated files for testing
+        arg("kotlin.fast.mock.generated", "${buildDir}/generated/source/kaptKotlin/test")
+    }
 }
 
 sourceSets {

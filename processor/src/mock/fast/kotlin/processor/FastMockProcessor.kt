@@ -66,6 +66,7 @@ internal class FastMockProcessor : AbstractProcessor() {
             .build()
 
         val kaptKotlinGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
+            ?: processingEnv.options[DEFAULT_KAPT_KOTLIN_GENERATED_OPTION_NAME]
         file.writeTo(File(kaptKotlinGeneratedDir, "$mockClassName.kt"))
     }
 
@@ -194,6 +195,7 @@ internal class FastMockProcessor : AbstractProcessor() {
     }
 
     companion object {
-        const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
+        const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kotlin.fast.mock.generated"
+        const val DEFAULT_KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
     }
 }
