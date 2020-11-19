@@ -2,7 +2,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.4.10"
+    id("net.rdrei.android.buildtimetracker") version "0.11.0"
 }
+
 group = "me.kamikaze"
 version = "1.0-SNAPSHOT"
 
@@ -33,4 +35,14 @@ allprojects {
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+buildtimetracker {
+    reporters {
+        register("summary") {
+            options["ordered"] = "true"
+            options["barstyle"] = "ascii"
+            options["shortenTaskNames"] = "false"
+        }
+    }
 }
