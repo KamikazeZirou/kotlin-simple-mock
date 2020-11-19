@@ -4,8 +4,6 @@ plugins {
 }
 
 kapt {
-    generateStubs = true
-
     arguments {
         // Specify the path of the generated mock.
         // In the default path, the product code will contain mocks.
