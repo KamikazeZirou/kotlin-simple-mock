@@ -2,10 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.4.10"
+    id("maven")
     id("net.rdrei.android.buildtimetracker") version "0.11.0"
 }
 
-group = "me.kamikaze"
+group = "com.github.KamikazeZirou"
 version = "1.0-SNAPSHOT"
 
 buildscript {
