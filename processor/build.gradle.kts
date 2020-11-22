@@ -27,7 +27,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = "com.github.KamikzeZirou"
-            artifactId = "kotlin-fast-mock"
+            artifactId = "kotlin-simple-mock"
             version = "0.0.1"
             from(components["kotlin"])
         }

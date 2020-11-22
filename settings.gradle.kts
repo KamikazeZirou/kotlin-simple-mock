@@ -1,3 +1,3 @@
 
-rootProject.name = "kotlin-fast-mock"
+rootProject.name = "kotlin-simple-mock"
 include("sample", "processor")

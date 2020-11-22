@@ -1,4 +1,4 @@
-# kotlin-fast-mock
+# kotlin-simple-mock
 
 ## Setup(Gradle Kotlin DSL)
 
@@ -17,8 +17,8 @@ allprojects {
 
 ```
 dependencies {
-    implementation("com.github.KamikazeZirou.kotlin-fast-mock:processor:0.0.2")
-    kapt("com.github.KamikazeZirou.kotlin-fast-mock:processor:0.0.2")
+    implementation("com.github.KamikazeZirou.kotlin-simple-mock:processor:0.0.2")
+    kapt("com.github.KamikazeZirou.kotlin-simple-mock:processor:0.0.2")
 }
 ```
 
@@ -31,13 +31,13 @@ plugins {
 
 kapt {
     arguments {
-        arg("kotlin.fast.mock.generated", "${buildDir}/generated/kotlin-fast-mock")
+        arg("kotlin.simple.mock.generated", "${buildDir}/generated/kotlin-simple-mock")
     }
 }
 
 sourceSets {
     // Here I assume that the test code is placed in the "test" directory of the module. 
-    getByName("test").java.srcDirs("test", "${buildDir}/generated/kotlin-fast-mock")
+    getByName("test").java.srcDirs("test", "${buildDir}/generated/kotlin-simple-mock")
 }
 ```
 

@@ -8,13 +8,13 @@ kapt {
         // Specify the path of the generated mock.
         // In the default path, the product code will contain mocks.
         // So, specify the directory of auto-generated files for testing
-        arg("kotlin.fast.mock.generated", "${buildDir}/generated/kotlin-fast-mock")
+        arg("kotlin.simple.mock.generated", "${buildDir}/generated/kotlin-simple-mock")
     }
 }
 
 sourceSets {
     getByName("main").java.srcDirs("src")
-    getByName("test").java.srcDirs("test", "${buildDir}/generated/kotlin-fast-mock")
+    getByName("test").java.srcDirs("test", "${buildDir}/generated/kotlin-simple-mock")
 }
 
 dependencies {

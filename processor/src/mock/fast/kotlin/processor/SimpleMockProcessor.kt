@@ -1,16 +1,8 @@
 package mock.fast.kotlin.processor
 
 import com.google.auto.service.AutoService
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.LambdaTypeName
-import com.squareup.kotlinpoet.MUTABLE_LIST
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.metadata.ImmutableKmClass
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.specs.internal.ClassInspectorUtil
@@ -29,7 +21,7 @@ import javax.lang.model.element.TypeElement
 
 @AutoService(Processor::class)
 @OptIn(KotlinPoetMetadataPreview::class)
-internal class FastMockProcessor : AbstractProcessor() {
+internal class SimpleMockProcessor : AbstractProcessor() {
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
         return mutableSetOf(Mockable::class.java.name)
     }
@@ -195,7 +187,7 @@ internal class FastMockProcessor : AbstractProcessor() {
     }
 
     companion object {
-        const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kotlin.fast.mock.generated"
+        const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kotlin.simple.mock.generated"
         const val DEFAULT_KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
     }
 }
