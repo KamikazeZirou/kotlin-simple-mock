@@ -3,7 +3,8 @@ package mock.fast.kotlin.sample
 import mock.fast.kotlin.Mockable
 
 @Mockable
-interface World<K, V> {
-    fun get(): List<K>
+interface Generics<out K, in V> {
+    fun get(id: Int): K
+    fun getAll(): List<K>
     fun add(elm: V)
 }
