@@ -8,6 +8,7 @@ import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.specs.internal.ClassInspectorUtil
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
+import kotlinx.metadata.KmVariance
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import mock.fast.kotlin.Mockable
@@ -50,7 +51,22 @@ internal class SimpleMockProcessor : AbstractProcessor() {
         val file = FileSpec.builder(packageName, mockClassName)
             .addType(
                 TypeSpec.classBuilder(mockClassName)
-                    .addSuperinterface(ClassInspectorUtil.createClassName(klass.name))
+                    .addTypeVariables(klass.typeParameters.map {
+                        TypeVariableName(it.name)
+                    })
+                    .apply {
+                        if (klass.typeParameters.isEmpty()) {
+                            addSuperinterface(ClassInspectorUtil.createClassName(klass.name))
+                        } else {
+                            addSuperinterface(
+                                ClassInspectorUtil.createClassName(klass.name)
+                                    .parameterizedBy(klass.typeParameters.map {
+                                        TypeVariableName(it.name)
+
+                                    })
+                            )
+                        }
+                    }
                     .addMockFunctions(type.funSpecs)
                     .addMockProperties(type.propertySpecs)
                     .build()
@@ -81,26 +97,37 @@ internal class SimpleMockProcessor : AbstractProcessor() {
                 .mutable()
                 .initializer("null")
                 .build()
-        ).addProperty(
+        )
+
+        // Generate a counter to call the method.
+        addProperty(
             PropertySpec
                 .builder("${funSpec.name}CallCount", Int::class.asTypeName())
                 .mutable()
                 .initializer("0")
                 .build()
-
-        ).addProperty(
-            PropertySpec
-                .builder(
-                    "${funSpec.name}FuncArgValues",
-                    MUTABLE_LIST.parameterizedBy(
-                        List::class.asTypeName().parameterizedBy(Any::class.asTypeName())
-                    )
-                )
-                .mutable()
-                .initializer("mutableListOf()")
-                .build()
         )
 
+        // Generate argument captures if necessary.
+        // The type of argument capture is List<List<*>>>.
+        if (funSpec.parameters.isNotEmpty()) {
+            addProperty(
+                PropertySpec
+                    .builder(
+                        "${funSpec.name}FuncArgValues",
+                        MUTABLE_LIST.parameterizedBy(
+                            List::class.asTypeName().parameterizedBy(
+                                WildcardTypeName.producerOf(
+                                    Any::class.asTypeName().copy(nullable = true)
+                                )
+                            )
+                        )
+                    )
+                    .mutable()
+                    .initializer("mutableListOf()")
+                    .build()
+            )
+        }
 
         val params = funSpec.parameters.joinToString(",") { it.name }
         val supportModifiers = setOf(
@@ -116,7 +143,12 @@ internal class SimpleMockProcessor : AbstractProcessor() {
                 .addParameters(funSpec.parameters)
                 .apply { funSpec.returnType?.let { returns(it) } }
                 .addStatement("${funSpec.name}CallCount += 1")
-                .addStatement("${funSpec.name}FuncArgValues.add(listOf(${params}))")
+                .apply {
+                    // Generate argument captures if necessary.
+                    if (funSpec.parameters.isNotEmpty()) {
+                        addStatement("${funSpec.name}FuncArgValues.add(listOf(${params}))")
+                    }
+                }
                 .addStatement("return ${funSpec.name}FuncHandler!!(${params})")
                 .build()
         )
@@ -184,6 +216,14 @@ internal class SimpleMockProcessor : AbstractProcessor() {
         val kotlinMetadata = KotlinClassMetadata.read(header)
         val classMetadata = kotlinMetadata as KotlinClassMetadata.Class
         return classMetadata.toImmutableKmClass()
+    }
+
+    private fun KmVariance.toKModifier(): KModifier? {
+        return when (this) {
+            KmVariance.IN -> KModifier.IN
+            KmVariance.OUT -> KModifier.OUT
+            KmVariance.INVARIANT -> null
+        }
     }
 
     companion object {

@@ -40,7 +40,6 @@ class TodosRepositoryTest {
 
         // Then
         assertThat(mock.getCallCount).isEqualTo(1)
-        assertThat(mock.getFuncArgValues.first()).isEmpty()
         assertThat(todos).isEqualTo(listOf(Todo("foobar")))
     }
 
