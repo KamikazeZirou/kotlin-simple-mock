@@ -125,4 +125,4 @@ class HelloTest {
 
 - Only interface supported for now.
 - Generic functions are not supported.
-- The super interface mock is not generated.
+- The super interface mock is not generated. So you need to override the methods and properties of the super interface with the interface to mock.
