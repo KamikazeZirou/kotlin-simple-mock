@@ -87,6 +87,10 @@ internal class SimpleMockProcessor : AbstractProcessor() {
     private fun ImmutableKmClass.toMockClass(): ImmutableKmClass {
         val mockClass = toMutable()
 
+        // drop unnecessary data.
+        mockClass.companionObject = null
+        mockClass.nestedClasses.clear()
+
         // drop methods and properties because the mock implementation generates later.
         mockClass.functions.clear()
         mockClass.properties.clear()
