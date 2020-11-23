@@ -48,7 +48,7 @@ internal class SimpleMockProcessor : AbstractProcessor() {
     private fun generateMock(klass: ImmutableKmClass) {
         val names = klass.name.split("/")
         val packageName = names.dropLast(1).joinToString(".")
-        val mockClassName = "Mock${names.last()}"
+        val mockClassName = "Mock${names.last()}".replace(".", "")
 
         val targetType = klass.toTypeSpec(classInspector = null)
         val mockType = klass.toMockClass().toTypeSpec(
