@@ -30,8 +30,8 @@ allprojects {
 
 ```
 dependencies {
-    implementation("com.github.KamikazeZirou.kotlin-simple-mock:processor:0.0.3")
-    kapt("com.github.KamikazeZirou.kotlin-simple-mock:processor:0.0.3")
+    implementation("com.github.KamikazeZirou.kotlin-simple-mock:processor:0.0.4")
+    kapt("com.github.KamikazeZirou.kotlin-simple-mock:processor:0.0.4")
 }
 ```
 
