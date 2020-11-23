@@ -101,3 +101,9 @@ class HelloTest {
 ```
 
 #### Step 4. Run test.
+
+## Limitations
+
+- Only interface supported for now.
+- Generic functions are not supported.
+- The super interface mock is not generated.
