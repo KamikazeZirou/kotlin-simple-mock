@@ -64,7 +64,7 @@ import mock.simple.kotlin.Mockable
 @Mockable
 interface Hello {
     fun add(a: Int, b: Int): Int
-    val num: Int
+    var num: Int
 }
 ```
 
@@ -75,16 +75,22 @@ The following code will be generated.
 ```
 public class MockHello : Hello {
   public var addFuncHandler: ((a: Int, b: Int) -> Int)? = null
-
   public var addCallCount: Int = 0
-
-  public var addFuncArgValues: MutableList<List<Any>> = mutableListOf()
-
+  public var addFuncArgValues: MutableList<List<*>> = mutableListOf()
   public override fun add(a: Int, b: Int): Int {
     addCallCount += 1
     addFuncArgValues.add(listOf(a,b))
     return addFuncHandler!!(a,b)
   }
+
+  public var underlyingNum: Int? = null
+  public var numSetCallCount: Int = 0
+  public override var num: Int
+    get() = underlyingNum!!
+    set(newValue) {
+      underlyingNum = newValue
+      numSetCallCount += 1
+    }
 }
 ```
 
