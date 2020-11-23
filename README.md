@@ -94,8 +94,6 @@ public class MockHello : Hello {
 }
 ```
 
-Note: Here is an example of a method, but the property can also be mocked.
-
 #### Step 3. Write test code with the generated mock.
 
 ```
