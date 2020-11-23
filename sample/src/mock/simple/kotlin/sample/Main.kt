@@ -1,4 +1,4 @@
-package mock.fast.kotlin.sample
+package mock.simple.kotlin.sample
 
 fun main() {
     println("Hello World")

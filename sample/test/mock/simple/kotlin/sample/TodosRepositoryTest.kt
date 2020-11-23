@@ -1,75 +1,71 @@
-package mock.fast.kotlin.other
+package mock.simple.kotlin.sample
 
 import com.google.common.truth.Truth.assertThat
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.stub
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runBlockingTest
-import mock.fast.kotlin.sample.Todo
-import mock.fast.kotlin.sample.TodosRepository
 import org.junit.Before
 import org.junit.Test
 
-class MockitoTodosRepositoryTest {
-    lateinit var mock: TodosRepository
+class TodosRepositoryTest {
+    internal lateinit var mock: MockTodosRepository
 
     @Before
     fun setUp() {
-        mock = mock()
+        mock = MockTodosRepository()
     }
 
     @Test
     fun add() = runBlockingTest {
         // Given
+        mock.addFuncHandler = {}
 
         // When
         mock.add(Todo("foobar"))
 
-
         // Then
-        verify(mock, times((1))).add(Todo("foobar"))
+        assertThat(mock.addCallCount).isEqualTo(1)
+        assertThat(mock.addFuncArgValues.first()).isEqualTo(listOf(Todo("foobar")))
     }
 
     @Test
     fun get() = runBlockingTest {
         // Given
-        mock.stub {
-            onBlocking { get() } doReturn flowOf(listOf(Todo("foobar")))
+        mock.getFuncHandler = {
+            flowOf(listOf(Todo("foobar")))
         }
 
         // When
         val todos = mock.get().first()
 
         // Then
-        verify(mock, times(1)).get()
+        assertThat(mock.getCallCount).isEqualTo(1)
         assertThat(todos).isEqualTo(listOf(Todo("foobar")))
     }
 
     @Test
     fun update() = runBlockingTest {
         // Given
+        mock.updateFuncHandler = {}
 
         // When
         mock.update(Todo("foobar"))
 
-
         // Then
-        verify(mock, times((1))).update(Todo("foobar"))
+        assertThat(mock.updateCallCount).isEqualTo(1)
+        assertThat(mock.updateFuncArgValues.first()).isEqualTo(listOf(Todo("foobar")))
     }
 
     @Test
     fun remove() = runBlockingTest {
         // Given
+        mock.removeFuncHandler = {}
 
         // When
         mock.remove(Todo("foobar"))
 
-
         // Then
-        verify(mock, times((1))).remove(Todo("foobar"))
+        assertThat(mock.removeCallCount).isEqualTo(1)
+        assertThat(mock.removeFuncArgValues.first()).isEqualTo(listOf(Todo("foobar")))
     }
 }

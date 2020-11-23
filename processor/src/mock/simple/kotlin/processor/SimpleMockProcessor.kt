@@ -1,4 +1,4 @@
-package mock.fast.kotlin.processor
+package mock.simple.kotlin.processor
 
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.*
@@ -16,7 +16,7 @@ import kotlinx.metadata.internal.metadata.ProtoBuf
 import kotlinx.metadata.internal.metadata.deserialization.Flags
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
-import mock.fast.kotlin.Mockable
+import mock.simple.kotlin.Mockable
 import java.io.File
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Processor

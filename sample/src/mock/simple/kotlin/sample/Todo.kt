@@ -1,3 +1,3 @@
-package mock.fast.kotlin.sample
+package mock.simple.kotlin.sample
 
 data class Todo(val name : String)

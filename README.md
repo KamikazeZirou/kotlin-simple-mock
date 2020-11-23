@@ -46,7 +46,7 @@ sourceSets {
 #### Step 1. Annotate to the interface you want to generate mock.
 
 ```
-import mock.fast.kotlin.Mockable
+import mock.simple.kotlin.Mockable
 
 @Mockable
 interface Hello {

@@ -1,7 +1,7 @@
-package mock.fast.kotlin.sample
+package mock.simple.kotlin.sample
 
 import kotlinx.coroutines.flow.Flow
-import mock.fast.kotlin.Mockable
+import mock.simple.kotlin.Mockable
 
 @Mockable
 interface TodosRepository {

@@ -1,16 +1,16 @@
-package mock.fast.kotlin.other
+package mock.simple.kotlin.other
 
-import kotlinx.coroutines.test.runBlockingTest
-import org.junit.Test
-import mock.fast.kotlin.sample.Todo
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import mock.fast.kotlin.sample.TodosRepository
+import kotlinx.coroutines.test.runBlockingTest
+import mock.simple.kotlin.sample.Todo
+import mock.simple.kotlin.sample.TodosRepository
 import org.junit.Before
+import org.junit.Test
 
 class MockKTodosRepositoryTest {
     lateinit var mock: TodosRepository

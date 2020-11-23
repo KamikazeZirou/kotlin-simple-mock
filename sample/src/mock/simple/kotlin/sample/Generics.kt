@@ -1,6 +1,6 @@
-package mock.fast.kotlin.sample
+package mock.simple.kotlin.sample
 
-import mock.fast.kotlin.Mockable
+import mock.simple.kotlin.Mockable
 
 @Mockable
 interface Generics<out A, in B, C : Comparable<C>> {
