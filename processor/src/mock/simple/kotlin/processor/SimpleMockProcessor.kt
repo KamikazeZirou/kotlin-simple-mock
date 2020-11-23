@@ -56,6 +56,8 @@ internal class SimpleMockProcessor : AbstractProcessor() {
             className = ClassName(packageName, mockClassName)
         )
 
+        // don't generate super interface methods and properties.
+        // How can we generate methods and properties of super interface?
         val file = FileSpec.builder(packageName, mockClassName)
             .addType(
                 mockType.toBuilder()
@@ -248,14 +250,6 @@ internal class SimpleMockProcessor : AbstractProcessor() {
         val kotlinMetadata = KotlinClassMetadata.read(header)
         val classMetadata = kotlinMetadata as KotlinClassMetadata.Class
         return classMetadata.toImmutableKmClass()
-    }
-
-    private fun KmVariance.toKModifier(): KModifier? {
-        return when (this) {
-            KmVariance.IN -> KModifier.IN
-            KmVariance.OUT -> KModifier.OUT
-            KmVariance.INVARIANT -> null
-        }
     }
 
     companion object {
