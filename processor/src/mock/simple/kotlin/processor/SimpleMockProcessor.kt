@@ -59,18 +59,7 @@ internal class SimpleMockProcessor : AbstractProcessor() {
         val file = FileSpec.builder(packageName, mockClassName)
             .addType(
                 mockType.toBuilder()
-                    .addSuperinterface(
-                        ClassInspectorUtil.createClassName(klass.name)
-                            .let {
-                                if (klass.typeParameters.isNotEmpty()) {
-                                    it.parameterizedBy(klass.typeParameters.map {
-                                        TypeVariableName(it.name)
-                                    })
-                                } else {
-                                    it
-                                }
-                            }
-                    )
+                    .addSuperinterface(klass.toSuperInterface())
                     .addMockFunctions(targetType.funSpecs)
                     .addMockProperties(targetType.propertySpecs)
                     .build()
@@ -82,25 +71,38 @@ internal class SimpleMockProcessor : AbstractProcessor() {
         file.writeTo(File(kaptKotlinGeneratedDir, "$mockClassName.kt"))
     }
 
+    private fun ImmutableKmClass.toSuperInterface(): TypeName {
+        return ClassInspectorUtil.createClassName(name)
+            .let { className ->
+                if (typeParameters.isNotEmpty()) {
+                    className.parameterizedBy(typeParameters.map {
+                        TypeVariableName(it.name)
+                    })
+                } else {
+                    className
+                }
+            }
+    }
+
     private fun ImmutableKmClass.toMockClass(): ImmutableKmClass {
-        val mockKlass = toMutable()
+        val mockClass = toMutable()
 
         // drop methods and properties because the mock implementation generates later.
-        mockKlass.functions.clear()
-        mockKlass.properties.clear()
+        mockClass.functions.clear()
+        mockClass.properties.clear()
 
         // Interface -> Class
         val bitWidth = Flags.CLASS_KIND.bitWidth
         val offset = Flags.CLASS_KIND.offset
         val value = ProtoBuf.Class.Kind.CLASS.number
-        mockKlass.flags = flagsOf(Flag(offset, bitWidth, value))
+        mockClass.flags = flagsOf(Flag(offset, bitWidth, value))
 
         // drop variance because it is unnecessary
-        mockKlass.typeParameters.forEach {
+        mockClass.typeParameters.forEach {
             it.variance = KmVariance.INVARIANT
         }
 
-        return mockKlass.toImmutable()
+        return mockClass.toImmutable()
     }
 
     private fun TypeSpec.Builder.addMockFunctions(funSpecs: List<FunSpec>): TypeSpec.Builder = apply {
