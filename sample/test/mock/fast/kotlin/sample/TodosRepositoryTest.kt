@@ -8,7 +8,7 @@ import org.junit.Before
 import org.junit.Test
 
 class TodosRepositoryTest {
-    lateinit var mock: MockTodosRepository
+    internal lateinit var mock: MockTodosRepository
 
     @Before
     fun setUp() {

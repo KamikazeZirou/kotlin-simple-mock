@@ -7,8 +7,13 @@ import com.squareup.kotlinpoet.metadata.ImmutableKmClass
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.specs.internal.ClassInspectorUtil
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
+import com.squareup.kotlinpoet.metadata.toImmutable
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
+import kotlinx.metadata.Flag
 import kotlinx.metadata.KmVariance
+import kotlinx.metadata.flagsOf
+import kotlinx.metadata.internal.metadata.ProtoBuf
+import kotlinx.metadata.internal.metadata.deserialization.Flags
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import mock.fast.kotlin.Mockable
@@ -43,32 +48,31 @@ internal class SimpleMockProcessor : AbstractProcessor() {
     private fun generateMock(klass: ImmutableKmClass) {
         val names = klass.name.split("/")
         val packageName = names.dropLast(1).joinToString(".")
-        val className = klass.name.split("/").last()
-        val mockClassName = "Mock$className"
+        val mockClassName = "Mock${names.last()}"
 
-        val type = klass.toTypeSpec(classInspector = null, className = ClassName(packageName, mockClassName))
+        val targetType = klass.toTypeSpec(classInspector = null)
+        val mockType = klass.toMockClass().toTypeSpec(
+            classInspector = null,
+            className = ClassName(packageName, mockClassName)
+        )
 
         val file = FileSpec.builder(packageName, mockClassName)
             .addType(
-                TypeSpec.classBuilder(mockClassName)
-                    .addTypeVariables(klass.typeParameters.map {
-                        TypeVariableName(it.name)
-                    })
-                    .apply {
-                        if (klass.typeParameters.isEmpty()) {
-                            addSuperinterface(ClassInspectorUtil.createClassName(klass.name))
-                        } else {
-                            addSuperinterface(
-                                ClassInspectorUtil.createClassName(klass.name)
-                                    .parameterizedBy(klass.typeParameters.map {
+                mockType.toBuilder()
+                    .addSuperinterface(
+                        ClassInspectorUtil.createClassName(klass.name)
+                            .let {
+                                if (klass.typeParameters.isNotEmpty()) {
+                                    it.parameterizedBy(klass.typeParameters.map {
                                         TypeVariableName(it.name)
-
                                     })
-                            )
-                        }
-                    }
-                    .addMockFunctions(type.funSpecs)
-                    .addMockProperties(type.propertySpecs)
+                                } else {
+                                    it
+                                }
+                            }
+                    )
+                    .addMockFunctions(targetType.funSpecs)
+                    .addMockProperties(targetType.propertySpecs)
                     .build()
             )
             .build()
@@ -76,6 +80,27 @@ internal class SimpleMockProcessor : AbstractProcessor() {
         val kaptKotlinGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
             ?: processingEnv.options[DEFAULT_KAPT_KOTLIN_GENERATED_OPTION_NAME]
         file.writeTo(File(kaptKotlinGeneratedDir, "$mockClassName.kt"))
+    }
+
+    private fun ImmutableKmClass.toMockClass(): ImmutableKmClass {
+        val mockKlass = toMutable()
+
+        // drop methods and properties because the mock implementation generates later.
+        mockKlass.functions.clear()
+        mockKlass.properties.clear()
+
+        // Interface -> Class
+        val bitWidth = Flags.CLASS_KIND.bitWidth
+        val offset = Flags.CLASS_KIND.offset
+        val value = ProtoBuf.Class.Kind.CLASS.number
+        mockKlass.flags = flagsOf(Flag(offset, bitWidth, value))
+
+        // drop variance because it is unnecessary
+        mockKlass.typeParameters.forEach {
+            it.variance = KmVariance.INVARIANT
+        }
+
+        return mockKlass.toImmutable()
     }
 
     private fun TypeSpec.Builder.addMockFunctions(funSpecs: List<FunSpec>): TypeSpec.Builder = apply {
