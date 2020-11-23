@@ -1,5 +1,18 @@
 # kotlin-simple-mock
 
+kotlin-simple-mock is a simple mock generator for Kotlin.
+This library uses kapt and generates interface mock classes with specific annotations.
+
+## Motivation
+
+The main motivation is to reduce the execution time of a few test cases.
+The execution time of a test using mockK can take more than 1 sec for even a few simple test cases. This feels very slow.
+Mockito is much faster than mockK, but it still takes a hundred milliseconds or more to run a few of tests.
+
+(At this time, it is untested whether the decrease in test run time is greater than the increase in build time.)
+
+The second motivation is to simplify the mock.
+
 ## Setup(Gradle Kotlin DSL)
 
 #### Step 1. Add it in your root build.gradle at the end of repositories.
