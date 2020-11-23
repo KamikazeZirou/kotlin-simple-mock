@@ -1,7 +1,9 @@
-package mock.simple.kotlin.other
+package mock.simple.kotlin.mockk
 
 import com.google.common.truth.Truth.assertThat
-import com.nhaarman.mockitokotlin2.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runBlockingTest
@@ -10,12 +12,12 @@ import mock.simple.kotlin.sample.TodosRepository
 import org.junit.Before
 import org.junit.Test
 
-class MockitoTodosRepositoryTest {
+class MockKTodosRepositoryTest {
     lateinit var mock: TodosRepository
 
     @Before
     fun setUp() {
-        mock = mock()
+        mock = mockk(relaxed = true)
     }
 
     @Test
@@ -27,21 +29,19 @@ class MockitoTodosRepositoryTest {
 
 
         // Then
-        verify(mock, times((1))).add(Todo("foobar"))
+        coVerify(atLeast = 1) { mock.add(Todo("foobar") )}
     }
 
     @Test
     fun get() = runBlockingTest {
         // Given
-        mock.stub {
-            onBlocking { get() } doReturn flowOf(listOf(Todo("foobar")))
-        }
+        coEvery { mock.get() } returns flowOf(listOf(Todo("foobar")))
 
         // When
         val todos = mock.get().first()
 
         // Then
-        verify(mock, times(1)).get()
+        coVerify(atLeast = 1) { mock.get() }
         assertThat(todos).isEqualTo(listOf(Todo("foobar")))
     }
 
@@ -54,7 +54,7 @@ class MockitoTodosRepositoryTest {
 
 
         // Then
-        verify(mock, times((1))).update(Todo("foobar"))
+        coVerify(atLeast = 1) { mock.update(Todo("foobar") )}
     }
 
     @Test
@@ -66,6 +66,6 @@ class MockitoTodosRepositoryTest {
 
 
         // Then
-        verify(mock, times((1))).remove(Todo("foobar"))
+        coVerify(atLeast = 1) { mock.remove(Todo("foobar") )}
     }
 }

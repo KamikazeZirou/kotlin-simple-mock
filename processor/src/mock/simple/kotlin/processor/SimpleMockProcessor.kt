@@ -6,7 +6,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.metadata.*
 import com.squareup.kotlinpoet.metadata.specs.internal.ClassInspectorUtil
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
-import kotlinx.metadata.Flag
 import kotlinx.metadata.KmVariance
 import kotlinx.metadata.internal.metadata.ProtoBuf
 import kotlinx.metadata.internal.metadata.deserialization.Flags
@@ -110,10 +109,6 @@ internal class SimpleMockProcessor : AbstractProcessor() {
 
     private fun Int.clearFlag(field: Flags.FlagField<*>, value: Int): Int {
         return (this and (((1 shl field.bitWidth) - 1) shl field.offset).inv())
-    }
-
-    private fun toFlag(field: Flags.FlagField<*>, value: Int): Flag {
-        return Flag(field.bitWidth, field.offset, value)
     }
 
     private fun TypeSpec.Builder.addMockFunctions(funSpecs: List<FunSpec>): TypeSpec.Builder = apply {
