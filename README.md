@@ -74,13 +74,13 @@ The following code will be generated.
 
 ```
 public class MockHello : Hello {
-  public var addFuncHandler: ((a: Int, b: Int) -> Int)? = null
+  public var addHandler: ((a: Int, b: Int) -> Int)? = null
   public var addCallCount: Int = 0
-  public var addFuncArgValues: MutableList<List<*>> = mutableListOf()
+  public var addArgValues: MutableList<List<*>> = mutableListOf()
   public override fun add(a: Int, b: Int): Int {
     addCallCount += 1
-    addFuncArgValues.add(listOf(a,b))
-    return addFuncHandler!!(a,b)
+    addArgValues.add(listOf(a,b))
+    return addHandler!!(a,b)
   }
 
   public var underlyingNum: Int? = null
@@ -104,7 +104,7 @@ class HelloTest {
     fun add() {
         // Given
         val mock = MockHello()
-        mock.addFuncHandler = { a, b ->
+        mock.addHandler = { a, b ->
             a + b
         }
 
@@ -114,7 +114,7 @@ class HelloTest {
         // When
         assertEquals(3, result)
         assertEquals(1, mock.addCallCount)
-        assertEquals(listOf(1, 2), mock.addFuncArgValues.first())
+        assertEquals(listOf(1, 2), mock.addArgValues.first())
     }
 }
 ```

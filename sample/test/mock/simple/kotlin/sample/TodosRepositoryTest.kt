@@ -18,20 +18,20 @@ class TodosRepositoryTest {
     @Test
     fun add() = runBlockingTest {
         // Given
-        mock.addFuncHandler = {}
+        mock.addHandler = {}
 
         // When
         mock.add(Todo("foobar"))
 
         // Then
         assertThat(mock.addCallCount).isEqualTo(1)
-        assertThat(mock.addFuncArgValues.first()).isEqualTo(listOf(Todo("foobar")))
+        assertThat(mock.addArgValues.first()).isEqualTo(listOf(Todo("foobar")))
     }
 
     @Test
     fun get() = runBlockingTest {
         // Given
-        mock.getFuncHandler = {
+        mock.getHandler = {
             flowOf(listOf(Todo("foobar")))
         }
 
@@ -46,26 +46,26 @@ class TodosRepositoryTest {
     @Test
     fun update() = runBlockingTest {
         // Given
-        mock.updateFuncHandler = {}
+        mock.updateHandler = {}
 
         // When
         mock.update(Todo("foobar"))
 
         // Then
         assertThat(mock.updateCallCount).isEqualTo(1)
-        assertThat(mock.updateFuncArgValues.first()).isEqualTo(listOf(Todo("foobar")))
+        assertThat(mock.updateArgValues.first()).isEqualTo(listOf(Todo("foobar")))
     }
 
     @Test
     fun remove() = runBlockingTest {
         // Given
-        mock.removeFuncHandler = {}
+        mock.removeHandler = {}
 
         // When
         mock.remove(Todo("foobar"))
 
         // Then
         assertThat(mock.removeCallCount).isEqualTo(1)
-        assertThat(mock.removeFuncArgValues.first()).isEqualTo(listOf(Todo("foobar")))
+        assertThat(mock.removeArgValues.first()).isEqualTo(listOf(Todo("foobar")))
     }
 }

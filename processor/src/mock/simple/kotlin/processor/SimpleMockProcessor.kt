@@ -112,30 +112,50 @@ internal class SimpleMockProcessor : AbstractProcessor() {
     }
 
     private fun TypeSpec.Builder.addMockFunctions(funSpecs: List<FunSpec>): TypeSpec.Builder = apply {
+        val funcNames = funSpecs.map { it.name }.groupingBy { it }.eachCount()
         funSpecs.forEach {
-            addMockFunction(it)
+            addMockFunction(it, funcNames.getOrElse(it.name) { 0 } > 1)
         }
     }
 
-    private fun TypeSpec.Builder.addMockFunction(funSpec: FunSpec): TypeSpec.Builder = apply {
-        addProperty(
-            PropertySpec
-                .builder(
-                    "${funSpec.name}FuncHandler", LambdaTypeName.get(
-                        funSpec.receiverType,
-                        parameters = funSpec.parameters,
-                        returnType = funSpec.returnType ?: Unit::class.asTypeName()
-                    ).copy(nullable = true)
-                )
-                .mutable()
-                .initializer("null")
-                .build()
-        )
+    private fun TypeSpec.Builder.addMockFunction(funSpec: FunSpec, overloads: Boolean = false): TypeSpec.Builder =
+        apply {
+            val funcParamStr = if (overloads) {
+                funSpec.parameters.fold(StringBuilder()) { builder, spec ->
+                    val typeName = spec.type
+                        .toString()
+                        .split(".")
+                        .last()
+                        .replace("?", "Opt")
+                        .capitalize()
+                    builder.append(spec.name.capitalize() + typeName)
+                }.toString()
+            } else {
+                ""
+            }
+
+            val funcHandlerName = "${funSpec.name}${funcParamStr}Handler"
+            val counterName = "${funSpec.name}${funcParamStr}CallCount"
+            val argCaptureName = "${funSpec.name}${funcParamStr}ArgValues"
+
+            addProperty(
+                PropertySpec
+                    .builder(
+                        funcHandlerName, LambdaTypeName.get(
+                            funSpec.receiverType,
+                            parameters = funSpec.parameters,
+                            returnType = funSpec.returnType ?: Unit::class.asTypeName()
+                        ).copy(nullable = true)
+                    )
+                    .mutable()
+                    .initializer("null")
+                    .build()
+            )
 
         // Generate a counter to call the method.
         addProperty(
             PropertySpec
-                .builder("${funSpec.name}CallCount", Int::class.asTypeName())
+                .builder(counterName, Int::class.asTypeName())
                 .mutable()
                 .initializer("0")
                 .build()
@@ -147,7 +167,7 @@ internal class SimpleMockProcessor : AbstractProcessor() {
             addProperty(
                 PropertySpec
                     .builder(
-                        "${funSpec.name}FuncArgValues",
+                        argCaptureName,
                         MUTABLE_LIST.parameterizedBy(
                             List::class.asTypeName().parameterizedBy(
                                 WildcardTypeName.producerOf(
@@ -175,14 +195,14 @@ internal class SimpleMockProcessor : AbstractProcessor() {
                 })
                 .addParameters(funSpec.parameters)
                 .apply { funSpec.returnType?.let { returns(it) } }
-                .addStatement("${funSpec.name}CallCount += 1")
+                .addStatement("$counterName += 1")
                 .apply {
                     // Generate argument captures if necessary.
                     if (funSpec.parameters.isNotEmpty()) {
-                        addStatement("${funSpec.name}FuncArgValues.add(listOf(${params}))")
+                        addStatement("${argCaptureName}.add(listOf(${params}))")
                     }
                 }
-                .addStatement("return ${funSpec.name}FuncHandler!!(${params})")
+                .addStatement("return ${funcHandlerName}!!(${params})")
                 .build()
         )
     }
