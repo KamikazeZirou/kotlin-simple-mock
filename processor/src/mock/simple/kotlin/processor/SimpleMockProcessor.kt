@@ -90,6 +90,7 @@ internal class SimpleMockProcessor : AbstractProcessor() {
         // drop unnecessary data.
         mockClass.companionObject = null
         mockClass.nestedClasses.clear()
+        mockClass.supertypes.clear()
 
         // drop methods and properties because the mock implementation generates later.
         mockClass.functions.clear()
